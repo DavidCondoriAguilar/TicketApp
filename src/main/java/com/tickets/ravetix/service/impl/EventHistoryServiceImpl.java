@@ -31,6 +31,13 @@ public class EventHistoryServiceImpl implements EventHistoryService {
     private final EventRepository eventRepository;
     private final EventHistoryMapper eventHistoryMapper;
 
+    /**
+     * Obtiene el historial de eventos por su identificador único.
+     *
+     * @param id Identificador único del historial de evento.
+     * @return DTO con los datos del historial encontrado.
+     * @throws ResourceNotFoundException si no existe el historial.
+     */
     @Override
     @Transactional(readOnly = true)
     public EventHistoryResponseDTO getEventHistoryById(UUID id) {
@@ -40,6 +47,14 @@ public class EventHistoryServiceImpl implements EventHistoryService {
                 .orElseThrow(() -> new ResourceNotFoundException("EventHistory", "id", id));
     }
 
+    /**
+     * Obtiene el historial de eventos de un usuario específico, paginado.
+     *
+     * @param userId Identificador único del usuario.
+     * @param pageable Parámetro de paginación y ordenamiento.
+     * @return Página de historiales encontrados.
+     * @throws ResourceNotFoundException si el usuario no existe.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<EventHistoryResponseDTO> getEventHistoryByUserId(UUID userId, Pageable pageable) {
@@ -51,6 +66,14 @@ public class EventHistoryServiceImpl implements EventHistoryService {
                 .map(eventHistoryMapper::toDto);
     }
 
+    /**
+     * Obtiene el historial de eventos de un evento específico, paginado.
+     *
+     * @param eventId Identificador único del evento.
+     * @param pageable Parámetro de paginación y ordenamiento.
+     * @return Página de historiales encontrados.
+     * @throws ResourceNotFoundException si el evento no existe.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<EventHistoryResponseDTO> getEventHistoryByEventId(UUID eventId, Pageable pageable) {
@@ -62,6 +85,14 @@ public class EventHistoryServiceImpl implements EventHistoryService {
                 .map(eventHistoryMapper::toDto);
     }
 
+    /**
+     * Confirma la asistencia de un usuario a un evento, creando o actualizando el historial correspondiente.
+     *
+     * @param eventId Identificador único del evento.
+     * @param userId Identificador único del usuario.
+     * @return DTO con los datos del historial actualizado.
+     * @throws ResourceNotFoundException si el usuario o evento no existen.
+     */
     @Override
     @Transactional
     public EventHistoryResponseDTO confirmAttendance(UUID eventId, UUID userId) {
@@ -92,6 +123,17 @@ public class EventHistoryServiceImpl implements EventHistoryService {
         return eventHistoryMapper.toDto(savedHistory);
     }
 
+    /**
+     * Registra la calificación y comentario de un usuario para un evento, validando el rango de la calificación.
+     *
+     * @param eventId Identificador único del evento.
+     * @param userId Identificador único del usuario.
+     * @param rating Calificación (1-5).
+     * @param comment Comentario opcional.
+     * @return DTO con los datos del historial actualizado.
+     * @throws ValidationException si la calificación no está en el rango permitido o el usuario no tiene historial para el evento.
+     * @throws ResourceNotFoundException si el usuario o evento no existen.
+     */
     @Override
     @Transactional
     public EventHistoryResponseDTO rateEvent(UUID eventId, UUID userId, Integer rating, String comment) {

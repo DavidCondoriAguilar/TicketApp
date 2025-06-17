@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.tickets.ravetix.util.EventStatisticsCalculator;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -32,6 +33,15 @@ public class TicketServiceImpl implements TicketService {
     private final UserRepository userRepository;
     private final TicketMapper ticketMapper;
 
+    /**
+     * Crea un nuevo ticket para un usuario en una zona específica de un evento, validando la existencia de las entidades
+     * relacionadas y la disponibilidad de la zona. Si la zona no pertenece al evento o no hay capacidad, lanza una excepción.
+     *
+     * @param ticketDTO Objeto de transferencia con los datos necesarios para crear el ticket.
+     * @return TicketResponseDTO con la información del ticket creado.
+     * @throws NotFoundException si el evento, zona o usuario no existen.
+     * @throws ValidationException si la zona no pertenece al evento o no hay entradas disponibles.
+     */
     @Override
     @Transactional
     public TicketResponseDTO createTicket(TicketRequestDTO ticketDTO) {
@@ -70,15 +80,30 @@ public class TicketServiceImpl implements TicketService {
         // Guardar el ticket
         Ticket savedTicket = ticketRepository.save(ticket);
         
+        // Actualizar estadísticas del evento y zona
+        EventStatisticsCalculator.calculateEventStatistics(event);
+        EventStatisticsCalculator.calculateZoneStatistics(zone);
+        
         return ticketMapper.toDto(savedTicket);
     }
     
-    // Método auxiliar para generar códigos QR (puedes implementarlo según tus necesidades)
+    /**
+     * Genera un código QR único para el ticket. Método auxiliar que puede ser implementado según los requisitos del sistema.
+     *
+     * @return String con el código QR generado.
+     */
     private String generateQrCode() {
         // Implementa la generación del código QR aquí
         return "QR-" + UUID.randomUUID().toString();
     }
 
+    /**
+     * Recupera la información de un ticket por su identificador único (UUID).
+     *
+     * @param id Identificador único del ticket.
+     * @return TicketResponseDTO con los datos del ticket encontrado.
+     * @throws NotFoundException si el ticket no existe.
+     */
     @Override
     @Transactional(readOnly = true)
     public TicketResponseDTO getTicketById(UUID id) {
@@ -87,6 +112,14 @@ public class TicketServiceImpl implements TicketService {
                 .orElseThrow(() -> new NotFoundException("Ticket no encontrado con ID: " + id));
     }
 
+    /**
+     * Obtiene una lista paginada de tickets asociados a un usuario específico.
+     *
+     * @param userId Identificador único del usuario.
+     * @param pageable Parámetro de paginación y ordenamiento.
+     * @return Page<TicketResponseDTO> página de tickets encontrados.
+     * @throws NotFoundException si el usuario no existe.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<TicketResponseDTO> getTicketsByUserId(UUID userId, Pageable pageable) {
@@ -97,6 +130,14 @@ public class TicketServiceImpl implements TicketService {
                 .map(ticketMapper::toDto);
     }
 
+    /**
+     * Obtiene una lista paginada de tickets asociados a un evento específico.
+     *
+     * @param eventId Identificador único del evento.
+     * @param pageable Parámetro de paginación y ordenamiento.
+     * @return Page<TicketResponseDTO> página de tickets encontrados.
+     * @throws NotFoundException si el evento no existe.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<TicketResponseDTO> getTicketsByEventId(UUID eventId, Pageable pageable) {
@@ -107,6 +148,15 @@ public class TicketServiceImpl implements TicketService {
                 .map(ticketMapper::toDto);
     }
 
+    /**
+     * Cancela un ticket existente, validando que no haya sido previamente cancelado o utilizado. Actualiza el estado y registra el motivo de cancelación.
+     * Puede ser extendido para incluir lógica de reembolso si es necesario.
+     *
+     * @param ticketId Identificador único del ticket a cancelar.
+     * @param reason Motivo de la cancelación.
+     * @throws NotFoundException si el ticket no existe.
+     * @throws ValidationException si el ticket ya está cancelado o ha sido utilizado.
+     */
     @Override
     @Transactional
     public void cancelTicket(UUID ticketId, String reason) {

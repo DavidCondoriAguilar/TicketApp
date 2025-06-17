@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.tickets.ravetix.util.EventStatisticsCalculator;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -28,14 +29,35 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
 
+    /**
+     * Obtiene todos los eventos paginados.
+     *
+     * @param pageable Parámetro de paginación y ordenamiento.
+     * @return Página de eventos encontrados.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<EventResponseDTO> findAll(Pageable pageable) {
         log.debug("Fetching all events with pagination: {}", pageable);
-        return eventRepository.findAll(pageable)
-                .map(eventMapper::toDto);
+        Page<Event> events = eventRepository.findAll(pageable);
+        
+        // Actualizar estadísticas de cada evento
+        events.getContent().forEach(event -> {
+            EventStatisticsCalculator.calculateEventStatistics(event);
+            event.getZonas().forEach(zone -> 
+                EventStatisticsCalculator.calculateZoneStatistics(zone));
+        });
+        
+        return events.map(eventMapper::toDto);
     }
 
+    /**
+     * Busca un evento por su identificador único.
+     *
+     * @param id Identificador único del evento.
+     * @return DTO con los datos del evento encontrado.
+     * @throws ResourceNotFoundException si el evento no existe.
+     */
     @Override
     @Transactional(readOnly = true)
     public EventResponseDTO findById(UUID id) {
@@ -45,6 +67,13 @@ public class EventServiceImpl implements EventService {
         return eventMapper.toDto(event);
     }
 
+    /**
+     * Crea un nuevo evento a partir de una entidad Event, validando fechas y estado.
+     *
+     * @param event Entidad Event a crear.
+     * @return DTO con los datos del evento creado.
+     * @throws EventException si las fechas o duración no son válidas.
+     */
     @Override
     @Transactional
     public EventResponseDTO create(Event event) {
@@ -83,7 +112,11 @@ public class EventServiceImpl implements EventService {
     }
     
     /**
-     * Método de conveniencia para crear un evento a partir de un DTO
+     * Crea un nuevo evento a partir de un DTO de creación.
+     *
+     * @param createDto DTO con los datos para crear el evento.
+     * @return DTO con los datos del evento creado.
+     * @throws EventException si las fechas no son válidas.
      */
     @Transactional
     public EventResponseDTO createFromDto(EventCreateDTO createDto) {
@@ -100,6 +133,15 @@ public class EventServiceImpl implements EventService {
         return create(event);
     }
 
+    /**
+     * Actualiza los datos de un evento existente, validando que no esté finalizado o cancelado.
+     *
+     * @param id Identificador único del evento a actualizar.
+     * @param updateDto DTO con los nuevos datos del evento.
+     * @return DTO con los datos del evento actualizado.
+     * @throws ResourceNotFoundException si el evento no existe.
+     * @throws EventException si el evento no puede ser modificado.
+     */
     @Override
     @Transactional
     public EventResponseDTO update(UUID id, EventUpdateDTO updateDto) {
@@ -125,6 +167,12 @@ public class EventServiceImpl implements EventService {
         return eventMapper.toDto(updatedEvent);
     }
 
+    /**
+     * Elimina un evento por su identificador único.
+     *
+     * @param id Identificador único del evento a eliminar.
+     * @throws ResourceNotFoundException si el evento no existe.
+     */
     @Override
     @Transactional
     public void delete(UUID id) {
@@ -140,6 +188,13 @@ public class EventServiceImpl implements EventService {
         log.info("Deleted event with id: {}", id);
     }
 
+    /**
+     * Obtiene eventos filtrados por estado.
+     *
+     * @param estado Estado del evento a filtrar.
+     * @param pageable Parámetro de paginación y ordenamiento.
+     * @return Página de eventos encontrados.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<EventResponseDTO> findByEstado(EstadoEvento estado, Pageable pageable) {
@@ -148,6 +203,14 @@ public class EventServiceImpl implements EventService {
                 .map(eventMapper::toDto);
     }
 
+    /**
+     * Obtiene eventos entre dos fechas dadas.
+     *
+     * @param startDate Fecha de inicio.
+     * @param endDate Fecha de fin.
+     * @param pageable Parámetro de paginación y ordenamiento.
+     * @return Página de eventos encontrados.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<EventResponseDTO> findBetweenDates(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
@@ -156,6 +219,13 @@ public class EventServiceImpl implements EventService {
                 .map(eventMapper::toDto);
     }
 
+    /**
+     * Busca eventos por un texto de búsqueda.
+     *
+     * @param query Texto de búsqueda.
+     * @param pageable Parámetro de paginación y ordenamiento.
+     * @return Página de eventos encontrados.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<EventResponseDTO> search(String query, Pageable pageable) {
@@ -164,6 +234,15 @@ public class EventServiceImpl implements EventService {
                 .map(eventMapper::toDto);
     }
 
+    /**
+     * Cambia el estado de un evento, validando la transición de estado.
+     *
+     * @param eventId Identificador único del evento.
+     * @param newStatus Nuevo estado a establecer.
+     * @return DTO con los datos del evento actualizado.
+     * @throws ResourceNotFoundException si el evento no existe.
+     * @throws EventException si la transición de estado no es válida.
+     */
     @Override
     @Transactional
     public EventResponseDTO changeStatus(UUID eventId, EstadoEvento newStatus) {
@@ -189,6 +268,13 @@ public class EventServiceImpl implements EventService {
     }
 
 
+    /**
+     * Valida si la transición de estado de un evento es permitida.
+     *
+     * @param current Estado actual.
+     * @param newStatus Nuevo estado propuesto.
+     * @return true si la transición es válida, false en caso contrario.
+     */
     private boolean isValidStatusTransition(EstadoEvento current, EstadoEvento newStatus) {
         // Implementar lógica de transiciones de estado válidas
         // Por ejemplo, no se puede cambiar de CANCELADO a cualquier otro estado

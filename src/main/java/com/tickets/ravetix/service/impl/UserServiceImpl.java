@@ -32,6 +32,14 @@ public class UserServiceImpl implements UserService {
     private final PaymentService paymentService;
     private final EventHistoryService eventHistoryService;
 
+    /**
+     * Crea un nuevo usuario en el sistema después de validar que el correo electrónico y el número de teléfono no estén registrados previamente.
+     * Si alguno de estos datos ya existe, se lanza una excepción indicando el conflicto.
+     *
+     * @param userDTO Objeto de transferencia con los datos del usuario a crear.
+     * @return UserResponseDTO con la información del usuario creado.
+     * @throws IllegalStateException si el correo o teléfono ya están en uso.
+     */
     @Override
     @Transactional
     public UserResponseDTO createUser(UserCreateDTO userDTO) {
@@ -50,6 +58,14 @@ public class UserServiceImpl implements UserService {
         return userMapper.toDto(savedUser);
     }
 
+    /**
+     * Recupera la información detallada de un usuario por su identificador único (UUID).
+     * Incluye los pagos realizados y el historial de eventos asociados al usuario.
+     *
+     * @param id Identificador único del usuario.
+     * @return UserResponseDTO con los datos del usuario, pagos e historial de eventos.
+     * @throws NotFoundException si no se encuentra un usuario con el ID proporcionado.
+     */
     @Override
     @Transactional(readOnly = true)
     public UserResponseDTO getUserById(UUID id) {
@@ -73,6 +89,12 @@ public class UserServiceImpl implements UserService {
         return userDTO;
     }
 
+    /**
+     * Obtiene una lista paginada de todos los usuarios registrados en el sistema.
+     *
+     * @param pageable Parámetro de paginación y ordenamiento.
+     * @return Page<UserResponseDTO> página de usuarios encontrados.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<UserResponseDTO> getAllUsers(Pageable pageable) {
@@ -80,6 +102,15 @@ public class UserServiceImpl implements UserService {
                 .map(userMapper::toDto);
     }
 
+    /**
+     * Actualiza los datos de un usuario existente, validando que el nuevo correo electrónico y teléfono no estén en uso por otro usuario.
+     *
+     * @param id Identificador único del usuario a actualizar.
+     * @param userDTO Objeto de transferencia con los nuevos datos del usuario.
+     * @return UserResponseDTO con la información actualizada del usuario.
+     * @throws NotFoundException si el usuario no existe.
+     * @throws IllegalStateException si el nuevo correo o teléfono ya están en uso por otro usuario.
+     */
     @Override
     @Transactional
     public UserResponseDTO updateUser(UUID id, UserUpdateDTO userDTO) {
@@ -105,6 +136,12 @@ public class UserServiceImpl implements UserService {
         return userMapper.toDto(updatedUser);
     }
 
+    /**
+     * Elimina un usuario del sistema por su identificador único (UUID).
+     *
+     * @param id Identificador único del usuario a eliminar.
+     * @throws NotFoundException si el usuario no existe.
+     */
     @Override
     @Transactional
     public void deleteUser(UUID id) {
@@ -114,12 +151,24 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(id);
     }
 
+    /**
+     * Verifica si existe un usuario registrado con el correo electrónico proporcionado.
+     *
+     * @param email Correo electrónico a verificar.
+     * @return true si existe un usuario con ese correo, false en caso contrario.
+     */
     @Override
     @Transactional(readOnly = true)
     public boolean existsByEmail(String email) {
         return userRepository.existsByCorreo(email);
     }
 
+    /**
+     * Verifica si existe un usuario registrado con el número de teléfono proporcionado.
+     *
+     * @param phone Número de teléfono a verificar.
+     * @return true si existe un usuario con ese teléfono, false en caso contrario.
+     */
     @Override
     @Transactional(readOnly = true)
     public boolean existsByPhone(String phone) {

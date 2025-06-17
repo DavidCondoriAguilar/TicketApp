@@ -26,8 +26,11 @@ public abstract class ZoneMapper implements BaseMapper<Zone, ZoneRequestDTO, Zon
     public abstract Zone toEntity(ZoneRequestDTO createDto);
     
     /**
-     * Maps a ZoneCreateDTO to a Zone entity.
-     * Similar to toEntity(ZoneRequestDTO) but specifically for ZoneCreateDTO
+     * Convierte un ZoneCreateDTO a una entidad Zone.
+     * Similar a toEntity(ZoneRequestDTO) pero específico para ZoneCreateDTO.
+     *
+     * @param createDto DTO de creación de zona.
+     * @return Entidad Zone resultante.
      */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "tickets", ignore = true)
@@ -35,6 +38,12 @@ public abstract class ZoneMapper implements BaseMapper<Zone, ZoneRequestDTO, Zon
     @Mapping(target = "precioBase", source = "precioBase")
     public abstract Zone toEntity(ZoneCreateDTO createDto);
 
+    /**
+     * Convierte una entidad Zone a un ZoneResponseDTO, calculando las entradas disponibles.
+     *
+     * @param entity Entidad Zone.
+     * @return DTO de respuesta de zona.
+     */
     @Override
     @Mapping(target = "entradasDisponibles", expression = "java(calculateAvailableSpots(entity))")
     public ZoneResponseDTO toDto(Zone entity) {
@@ -61,12 +70,17 @@ public abstract class ZoneMapper implements BaseMapper<Zone, ZoneRequestDTO, Zon
         return dto;
     }
 
+    /**
+     * Actualiza una entidad Zone a partir de un ZoneUpdateDTO.
+     *
+     * @param dto DTO con los valores actualizados.
+     * @param zone Entidad a actualizar.
+     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "evento", ignore = true)
     @Mapping(target = "tickets", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Override
-    public abstract void updateEntity(ZoneRequestDTO updateDto, @MappingTarget Zone entity);
+    public abstract void updateZoneFromDto(ZoneUpdateDTO dto, @MappingTarget Zone zone);
 
     protected Integer calculateAvailableSpots(Zone zone) {
         if (zone.getCapacidad() == null) {
@@ -82,15 +96,4 @@ public abstract class ZoneMapper implements BaseMapper<Zone, ZoneRequestDTO, Zon
     protected String mapLocationToString(com.tickets.ravetix.entity.Location location) {
         return MappingUtil.mapLocationToString(location);
     }
-    
-    /**
-     * Updates a Zone entity from a ZoneUpdateDTO.
-     * @param dto The DTO containing the updated values
-     * @param zone The entity to update
-     */
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "evento", ignore = true)
-    @Mapping(target = "tickets", ignore = true)
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    public abstract void updateZoneFromDto(ZoneUpdateDTO dto, @MappingTarget Zone zone);
 }

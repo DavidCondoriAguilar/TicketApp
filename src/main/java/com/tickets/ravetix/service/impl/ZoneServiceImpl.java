@@ -19,6 +19,32 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+/**
+ * Implementation of the {@link ZoneService} interface for managing zones within events.
+ * <p>
+ * This service provides methods to create, update, delete, and retrieve zones associated with events.
+ * It ensures business rules such as unique zone names per event and prevents deletion of zones with associated tickets.
+ * </p>
+ *
+ * <p>
+ * Main responsibilities:
+ * <ul>
+ *     <li>Find all zones by event ID with pagination support.</li>
+ *     <li>Retrieve a specific zone by its ID.</li>
+ *     <li>Create a new zone for a given event, ensuring unique zone names within the event.</li>
+ *     <li>Update an existing zone, enforcing name uniqueness constraints.</li>
+ *     <li>Delete a zone only if it has no associated tickets.</li>
+ *     <li>Find available zones for an event with pagination support.</li>
+ * </ul>
+ * </p>
+ *
+ * <p>
+ * This class uses {@link ZoneRepository}, {@link EventRepository}, and {@link ZoneMapper} for data access and mapping.
+ * Transactional boundaries are defined for each method as appropriate.
+ * </p>
+ *
+ * @author david
+ */
 @Service
 @RequiredArgsConstructor
 public class ZoneServiceImpl implements ZoneService {
@@ -26,6 +52,13 @@ public class ZoneServiceImpl implements ZoneService {
     private final EventRepository eventRepository;
     private final ZoneMapper zoneMapper;
 
+    /**
+     * Retrieves a paginated list of all zones for a specific event.
+     *
+     * @param eventId  The ID of the event.
+     * @param pageable Pagination information.
+     * @return A paginated list of zones.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<ZoneResponseDTO> findAllByEventId(UUID eventId, Pageable pageable) {
@@ -33,6 +66,13 @@ public class ZoneServiceImpl implements ZoneService {
                 .map(zoneMapper::toDto);
     }
 
+    /**
+     * Retrieves a specific zone by its ID.
+     *
+     * @param id The ID of the zone.
+     * @return The zone details.
+     * @throws NotFoundException if the zone is not found.
+     */
     @Override
     @Transactional(readOnly = true)
     public ZoneResponseDTO findById(UUID id) {
@@ -41,6 +81,14 @@ public class ZoneServiceImpl implements ZoneService {
                 .orElseThrow(() -> new NotFoundException("Zona no encontrada con ID: " + id));
     }
 
+    /**
+     * Creates a new zone for a given event.
+     *
+     * @param zoneDTO The zone data for creation.
+     * @return The created zone details.
+     * @throws NotFoundException   if the event is not found.
+     * @throws ValidationException if a zone with the same name already exists for the event.
+     */
     @Override
     @Transactional
     public ZoneResponseDTO create(ZoneCreateDTO zoneDTO) {
@@ -57,6 +105,15 @@ public class ZoneServiceImpl implements ZoneService {
         return zoneMapper.toDto(savedZone);
     }
 
+    /**
+     * Updates an existing zone.
+     *
+     * @param id      The ID of the zone to update.
+     * @param zoneDTO The new zone data.
+     * @return The updated zone details.
+     * @throws NotFoundException   if the zone is not found.
+     * @throws ValidationException if a zone with the same name already exists for the event.
+     */
     @Override
     @Transactional
     public ZoneResponseDTO update(UUID id, ZoneUpdateDTO zoneDTO) {
@@ -75,6 +132,13 @@ public class ZoneServiceImpl implements ZoneService {
         return zoneMapper.toDto(updatedZone);
     }
 
+    /**
+     * Deletes a zone by its ID.
+     *
+     * @param id The ID of the zone to delete.
+     * @throws NotFoundException   if the zone is not found.
+     * @throws ValidationException if the zone has associated tickets.
+     */
     @Override
     @Transactional
     public void delete(UUID id) {
@@ -88,6 +152,13 @@ public class ZoneServiceImpl implements ZoneService {
         zoneRepository.delete(zone);
     }
 
+    /**
+     * Retrieves a paginated list of available zones for a specific event.
+     *
+     * @param eventId  The ID of the event.
+     * @param pageable Pagination information.
+     * @return A paginated list of available zones.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<ZoneResponseDTO> findAvailableZonesByEventId(UUID eventId, Pageable pageable) {

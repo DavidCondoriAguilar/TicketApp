@@ -21,6 +21,13 @@ import java.util.UUID;
 public class ZoneController {
     private final ZoneService zoneService;
 
+    /**
+     * Obtiene todas las zonas asociadas a un evento, paginadas.
+     *
+     * @param eventId ID del evento.
+     * @param pageable Parámetros de paginación.
+     * @return Página de zonas del evento.
+     */
     @GetMapping
     public ResponseEntity<Page<ZoneResponseDTO>> getAllZonesByEventId(
             @PathVariable UUID eventId,
@@ -28,6 +35,13 @@ public class ZoneController {
         return ResponseEntity.ok(zoneService.findAllByEventId(eventId, pageable));
     }
 
+    /**
+     * Obtiene todas las zonas disponibles (con capacidad) para un evento, paginadas.
+     *
+     * @param eventId ID del evento.
+     * @param pageable Parámetros de paginación.
+     * @return Página de zonas disponibles.
+     */
     @GetMapping("/available")
     public ResponseEntity<Page<ZoneResponseDTO>> getAvailableZonesByEventId(
             @PathVariable UUID eventId,
@@ -35,6 +49,13 @@ public class ZoneController {
         return ResponseEntity.ok(zoneService.findAvailableZonesByEventId(eventId, pageable));
     }
 
+    /**
+     * Obtiene una zona específica por su ID dentro de un evento.
+     *
+     * @param eventId ID del evento.
+     * @param zoneId ID de la zona.
+     * @return Zona encontrada.
+     */
     @GetMapping("/{zoneId}")
     public ResponseEntity<ZoneResponseDTO> getZoneById(
             @PathVariable UUID eventId,
@@ -42,6 +63,13 @@ public class ZoneController {
         return ResponseEntity.ok(zoneService.findById(zoneId));
     }
 
+    /**
+     * Crea una nueva zona para un evento.
+     *
+     * @param eventId ID del evento.
+     * @param zoneCreateDTO Datos de la zona a crear.
+     * @return Zona creada.
+     */
     @PostMapping
     public ResponseEntity<ZoneResponseDTO> createZone(
             @PathVariable UUID eventId,
@@ -51,6 +79,14 @@ public class ZoneController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdZone);
     }
 
+    /**
+     * Actualiza una zona existente de un evento.
+     *
+     * @param eventId ID del evento.
+     * @param zoneId ID de la zona.
+     * @param zoneUpdateDTO Datos actualizados de la zona.
+     * @return Zona actualizada.
+     */
     @PutMapping("/{zoneId}")
     public ResponseEntity<ZoneResponseDTO> updateZone(
             @PathVariable UUID eventId,
@@ -60,6 +96,12 @@ public class ZoneController {
         return ResponseEntity.ok(zoneService.update(zoneId, zoneUpdateDTO));
     }
 
+    /**
+     * Elimina una zona de un evento por su ID.
+     *
+     * @param eventId ID del evento.
+     * @param zoneId ID de la zona.
+     */
     @DeleteMapping("/{zoneId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteZone(

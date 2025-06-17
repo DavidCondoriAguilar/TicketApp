@@ -113,7 +113,7 @@ public abstract class TicketMapper implements BaseMapper<Ticket, TicketCreateDTO
     }
 
     @Override
-    public void updateEntity(Object updateDto, @MappingTarget Ticket entity) {
+    public Ticket updateEntity(Object updateDto, @MappingTarget Ticket entity) {
         // No se implementa actualización directa para tickets
         throw new UnsupportedOperationException("La actualización directa de tickets no está soportada");
     }

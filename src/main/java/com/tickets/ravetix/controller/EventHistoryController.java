@@ -18,11 +18,24 @@ public class EventHistoryController {
 
     private final EventHistoryService eventHistoryService;
 
+    /**
+     * Obtiene el historial de eventos por su ID.
+     *
+     * @param id ID del historial de evento.
+     * @return Historial encontrado.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<EventHistoryResponseDTO> getEventHistoryById(@PathVariable UUID id) {
         return ResponseEntity.ok(eventHistoryService.getEventHistoryById(id));
     }
 
+    /**
+     * Obtiene el historial de eventos de un usuario, paginado.
+     *
+     * @param userId ID del usuario.
+     * @param pageable Parámetros de paginación.
+     * @return Página de historiales encontrados.
+     */
     @GetMapping("/user/{userId}")
     public ResponseEntity<Page<EventHistoryResponseDTO>> getEventHistoryByUserId(
             @PathVariable UUID userId,
@@ -30,6 +43,13 @@ public class EventHistoryController {
         return ResponseEntity.ok(eventHistoryService.getEventHistoryByUserId(userId, pageable));
     }
 
+    /**
+     * Obtiene el historial de eventos de un evento, paginado.
+     *
+     * @param eventId ID del evento.
+     * @param pageable Parámetros de paginación.
+     * @return Página de historiales encontrados.
+     */
     @GetMapping("/event/{eventId}")
     public ResponseEntity<Page<EventHistoryResponseDTO>> getEventHistoryByEventId(
             @PathVariable UUID eventId,
@@ -37,6 +57,13 @@ public class EventHistoryController {
         return ResponseEntity.ok(eventHistoryService.getEventHistoryByEventId(eventId, pageable));
     }
 
+    /**
+     * Confirma la asistencia de un usuario a un evento.
+     *
+     * @param eventId ID del evento.
+     * @param userId ID del usuario.
+     * @return Historial actualizado.
+     */
     @PostMapping("/{eventId}/confirm-attendance/{userId}")
     public ResponseEntity<EventHistoryResponseDTO> confirmAttendance(
             @PathVariable UUID eventId,
@@ -44,6 +71,15 @@ public class EventHistoryController {
         return ResponseEntity.ok(eventHistoryService.confirmAttendance(eventId, userId));
     }
 
+    /**
+     * Registra la calificación y comentario de un usuario para un evento.
+     *
+     * @param eventId ID del evento.
+     * @param userId ID del usuario.
+     * @param rating Calificación (1-5).
+     * @param comment Comentario opcional.
+     * @return Historial actualizado.
+     */
     @PostMapping("/{eventId}/rate/{userId}")
     public ResponseEntity<EventHistoryResponseDTO> rateEvent(
             @PathVariable UUID eventId,

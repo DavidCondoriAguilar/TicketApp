@@ -44,6 +44,14 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentMapper paymentMapper;
     private final EventHistoryRepository eventHistoryRepository;
 
+    /**
+     * Crea un nuevo pago para un ticket, validando la existencia del usuario y ticket, el estado del ticket y el monto.
+     * El pago se crea inicialmente en estado PENDIENTE y luego se procesa automáticamente.
+     *
+     * @param paymentDTO Objeto de transferencia con los datos del pago a crear.
+     * @return PaymentResponseDTO con la información del pago procesado.
+     * @throws ValidationException si el usuario, ticket no existen, el ticket ya está pagado, el monto es inválido o no coincide con el precio del ticket.
+     */
     @Override
     @Transactional
     public PaymentResponseDTO createPayment(PaymentRequestDTO paymentDTO) {
@@ -95,6 +103,13 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    /**
+     * Obtiene la información de un pago por su identificador único (UUID).
+     *
+     * @param id Identificador único del pago.
+     * @return PaymentResponseDTO con los datos del pago encontrado.
+     * @throws ResourceNotFoundException si el pago no existe.
+     */
     @Override
     @Transactional
     public PaymentResponseDTO getPaymentById(UUID id) {
@@ -104,6 +119,14 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentMapper.toDto(payment);
     }
 
+    /**
+     * Obtiene una lista paginada de pagos realizados por un usuario específico.
+     *
+     * @param userId Identificador único del usuario.
+     * @param pageable Parámetro de paginación y ordenamiento.
+     * @return Page<PaymentResponseDTO> página de pagos encontrados.
+     * @throws ResourceNotFoundException si el usuario no existe.
+     */
     @Override
     @Transactional
     public Page<PaymentResponseDTO> getPaymentsByUserId(UUID userId, Pageable pageable) {
@@ -115,6 +138,14 @@ public class PaymentServiceImpl implements PaymentService {
                 .map(paymentMapper::toDto);
     }
 
+    /**
+     * Obtiene una lista paginada de pagos asociados a un ticket específico.
+     *
+     * @param ticketId Identificador único del ticket.
+     * @param pageable Parámetro de paginación y ordenamiento.
+     * @return Page<PaymentResponseDTO> página de pagos encontrados.
+     * @throws ResourceNotFoundException si el ticket no existe.
+     */
     @Override
     @Transactional
     public Page<PaymentResponseDTO> getPaymentsByTicketId(UUID ticketId, Pageable pageable) {
@@ -142,6 +173,15 @@ public class PaymentServiceImpl implements PaymentService {
         return new PageImpl<>(dtos, pageable, payments.size());
     }
 
+    /**
+     * Procesa un pago existente, validando su estado y la disponibilidad de la zona y evento asociados al ticket.
+     * Actualiza el estado del pago y del ticket, y registra el evento en el historial.
+     *
+     * @param paymentId Identificador único del pago a procesar.
+     * @return PaymentResponseDTO con la información del pago procesado.
+     * @throws ResourceNotFoundException si el pago no existe.
+     * @throws ValidationException si el pago ya fue procesado, el ticket ya está pagado, no hay entradas disponibles o hay errores en la información relacionada.
+     */
     @Override
     @Transactional
     public PaymentResponseDTO processPayment(UUID paymentId) {
@@ -244,6 +284,15 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    /**
+     * Procesa el reembolso de un pago completado, actualizando el estado del pago y del ticket asociado.
+     *
+     * @param paymentId Identificador único del pago a reembolsar.
+     * @param reason Motivo del reembolso.
+     * @return PaymentResponseDTO con la información del pago reembolsado.
+     * @throws ResourceNotFoundException si el pago no existe.
+     * @throws ValidationException si el pago no está en estado COMPLETADO.
+     */
     @Override
     @Transactional
     public PaymentResponseDTO refundPayment(UUID paymentId, String reason) {

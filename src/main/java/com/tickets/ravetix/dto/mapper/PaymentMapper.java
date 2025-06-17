@@ -74,7 +74,7 @@ public abstract class PaymentMapper implements BaseMapper<Payment, PaymentCreate
     }
 
     @Override
-    public void updateEntity(Object updateDto, @MappingTarget Payment entity) {
+    public Payment updateEntity(Object updateDto, @MappingTarget Payment entity) {
         throw new UnsupportedOperationException("La actualización directa de pagos no está soportada");
     }
 

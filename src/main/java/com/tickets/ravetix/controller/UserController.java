@@ -26,10 +26,10 @@ public class UserController {
     private final UserService userService;
 
     /**
-     * Create a new user.
+     * Crea un nuevo usuario.
      *
-     * @param userDTO the user to create
-     * @return the created user with status 201 (Created)
+     * @param userDTO Datos del usuario a crear.
+     * @return Usuario creado.
      */
     @PostMapping
     public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody UserCreateDTO userDTO) {
@@ -38,10 +38,10 @@ public class UserController {
     }
 
     /**
-     * Get a user by ID.
+     * Obtiene un usuario por su ID.
      *
-     * @param id the ID of the user to retrieve
-     * @return the user with status 200 (OK)
+     * @param id ID del usuario.
+     * @return Usuario encontrado.
      */
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable UUID id) {
@@ -50,10 +50,10 @@ public class UserController {
     }
 
     /**
-     * Get all users with pagination.
+     * Obtiene todos los usuarios paginados.
      *
-     * @param pageable the pagination information
-     * @return a page of users with status 200 (OK)
+     * @param pageable Parámetros de paginación.
+     * @return Página de usuarios.
      */
     @GetMapping
     public ResponseEntity<Page<UserResponseDTO>> getAllUsers(
@@ -63,11 +63,11 @@ public class UserController {
     }
 
     /**
-     * Update an existing user.
+     * Actualiza un usuario existente.
      *
-     * @param id the ID of the user to update
-     * @param userDTO the updated user data
-     * @return the updated user with status 200 (OK)
+     * @param id ID del usuario.
+     * @param userDTO Datos actualizados del usuario.
+     * @return Usuario actualizado.
      */
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> updateUser(
@@ -78,10 +78,9 @@ public class UserController {
     }
 
     /**
-     * Delete a user by ID.
+     * Elimina un usuario por su ID.
      *
-     * @param id the ID of the user to delete
-     * @return status 204 (No Content)
+     * @param id ID del usuario.
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
@@ -90,10 +89,10 @@ public class UserController {
     }
 
     /**
-     * Check if a user with the given email exists.
+     * Verifica si existe un usuario con el correo dado.
      *
-     * @param email the email to check
-     * @return true if a user with the email exists, false otherwise
+     * @param email Correo electrónico a verificar.
+     * @return true si existe, false en caso contrario.
      */
     @GetMapping("/check-email")
     public ResponseEntity<Boolean> checkEmailExists(@RequestParam String email) {
@@ -102,10 +101,10 @@ public class UserController {
     }
 
     /**
-     * Check if a user with the given phone number exists.
+     * Verifica si existe un usuario con el teléfono dado.
      *
-     * @param phone the phone number to check
-     * @return true if a user with the phone number exists, false otherwise
+     * @param phone Teléfono a verificar.
+     * @return true si existe, false en caso contrario.
      */
     @GetMapping("/check-phone")
     public ResponseEntity<Boolean> checkPhoneExists(@RequestParam String phone) {

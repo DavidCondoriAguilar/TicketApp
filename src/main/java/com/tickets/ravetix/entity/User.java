@@ -72,22 +72,37 @@ public class User extends BaseEntity {
         return getClass().hashCode();
     }
     
+    /**
+     * Lista de tickets adquiridos por el usuario.
+     * Relación uno a muchos.
+     */
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Ticket> tickets = new ArrayList<>();
     
+    /**
+     * Lista de pagos realizados por el usuario.
+     * Relación uno a muchos.
+     */
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> pagos = new ArrayList<>();
     
+    /**
+     * Historial de eventos relacionados con el usuario (asistencias, calificaciones, etc).
+     * Relación uno a muchos.
+     */
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventHistory> historialEventos = new ArrayList<>();
     
     /**
-     * The date and time when the user was registered.
-     * Automatically set when the user is first persisted.
+     * Fecha y hora de registro del usuario en el sistema.
+     * Se asigna automáticamente al persistir la entidad.
      */
     @Column(name = "fecha_registro", nullable = false, updatable = false)
     private LocalDateTime fechaRegistro;
     
+    /**
+     * Inicializa la fecha de registro antes de persistir la entidad.
+     */
     @PrePersist
     protected void onCreate() {
         if (fechaRegistro == null) {

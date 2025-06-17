@@ -40,7 +40,6 @@ public abstract class EventMapper implements BaseMapper<Event, EventCreateDTO, E
     @Mapping(target = "ubicacion", source = "ubicacion")
     @Mapping(target = "fechaHoraInicio", source = "fechaHoraInicio")
     @Mapping(target = "fechaHoraFin", source = "fechaHoraFin")
-    @Mapping(target = "duracionHoras", ignore = true) // Will be calculated in the entity
     @Override
     public abstract Event toEntity(EventCreateDTO createDto);
 
@@ -68,10 +67,10 @@ public abstract class EventMapper implements BaseMapper<Event, EventCreateDTO, E
     @Mapping(target = "ubicacion", source = "ubicacion")
     @Mapping(target = "fechaHoraInicio", source = "fechaHoraInicio")
     @Mapping(target = "fechaHoraFin", source = "fechaHoraFin")
-    @Mapping(target = "duracionHoras", ignore = true) // Will be calculated in the entity
+//    @Mapping(target = "duracionHoras", ignore = true) // Will be calculated in the entity
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Override
-    public abstract void updateEntity(EventUpdateDTO updateDto, @MappingTarget Event entity);
+    public abstract Event updateEntity(EventUpdateDTO updateDto, @MappingTarget Event entity);
 
     /**
      * Calculates total capacity from all zones

@@ -1,5 +1,7 @@
 package com.tickets.ravetix.dto.mapper;
 
+import org.mapstruct.MappingTarget;
+
 /**
  * Base mapper interface for DTO and entity conversion.
  *
@@ -23,5 +25,4 @@ public interface BaseMapper<E, C, U, R> {
     /**
      * Updates an entity with values from an update DTO.
      */
-    void updateEntity(U dto, E entity);
-}
+    E updateEntity(U dto, @MappingTarget E entity);}

@@ -61,7 +61,7 @@ public abstract class UserMapper implements BaseMapper<User, UserCreateDTO, User
     @Mapping(target = "fechaActualizacion", expression = "java(java.time.LocalDateTime.now())")
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Override
-    public abstract void updateEntity(UserUpdateDTO updateDto, @MappingTarget User entity);
+    public abstract User updateEntity(UserUpdateDTO updateDto, @MappingTarget User entity);
 
     // Métodos auxiliares para mapear relaciones
     protected java.util.List<TicketResponseDTO> mapTickets(User user) {
