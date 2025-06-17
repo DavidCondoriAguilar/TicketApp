@@ -7,6 +7,7 @@ import com.tickets.ravetix.entity.Payment;
 import com.tickets.ravetix.entity.Ticket;
 import com.tickets.ravetix.entity.User;
 import com.tickets.ravetix.entity.Zone;
+import com.tickets.ravetix.entity.EventHistory;
 import com.tickets.ravetix.enums.EstadoPago;
 import com.tickets.ravetix.enums.TicketState;
 import com.tickets.ravetix.exception.ResourceNotFoundException;
@@ -14,17 +15,20 @@ import com.tickets.ravetix.exception.ValidationException;
 import com.tickets.ravetix.repository.PaymentRepository;
 import com.tickets.ravetix.repository.TicketRepository;
 import com.tickets.ravetix.repository.UserRepository;
+import com.tickets.ravetix.repository.EventHistoryRepository;
 import com.tickets.ravetix.service.interfac.PaymentService;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Collections;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -38,6 +42,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final UserRepository userRepository;
     private final TicketRepository ticketRepository;
     private final PaymentMapper paymentMapper;
+    private final EventHistoryRepository eventHistoryRepository;
 
     @Override
     @Transactional
@@ -91,7 +96,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public PaymentResponseDTO getPaymentById(UUID id) {
         log.info("Fetching payment with ID: {}", id);
         Payment payment = paymentRepository.findById(id)
@@ -100,7 +105,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public Page<PaymentResponseDTO> getPaymentsByUserId(UUID userId, Pageable pageable) {
         log.info("Fetching payments for user ID: {}", userId);
         if (!userRepository.existsById(userId)) {
@@ -111,7 +116,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public Page<PaymentResponseDTO> getPaymentsByTicketId(UUID ticketId, Pageable pageable) {
         log.info("Fetching payments for ticket ID: {}", ticketId);
         if (!ticketRepository.existsById(ticketId)) {
@@ -199,13 +204,11 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setEstado(EstadoPago.COMPLETADO);
             paymentRepository.save(payment);
             
-            // Actualizar el estado del ticket a PAGADO
-            ticket.setEstado(TicketState.PAGADO);
-            ticketRepository.save(ticket);
+            // Crear entrada en el historial de eventos
+            createEventHistory(ticket);
             
             log.info("Payment processed successfully for ID: {}", paymentId);
             return paymentMapper.toDto(payment);
-            
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("Error al procesar el pago: {}", e.getMessage(), e);
@@ -217,6 +220,27 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setEstado(EstadoPago.FALLIDO);
             paymentRepository.save(payment);
             throw new ValidationException("Error al procesar el pago", e.getMessage());
+        }
+    }
+    
+    private void createEventHistory(Ticket ticket) {
+        try {
+            User user = userRepository.findById(ticket.getUsuario().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "id", ticket.getUsuario().getId()));
+                    
+            EventHistory eventHistory = new EventHistory();
+            eventHistory.setEvento(ticket.getEvento());
+            eventHistory.setUsuario(user);
+            eventHistory.setAsistenciaConfirmada(false);
+            eventHistory.setFechaConfirmacionAsistencia(LocalDateTime.now());
+            
+            eventHistoryRepository.save(eventHistory);
+            log.info("Created event history entry for user ID: {} and event ID: {}", 
+                    user.getId(), ticket.getEvento().getId());
+                    
+        } catch (Exception e) {
+            log.error("Error creating event history entry: {}", e.getMessage(), e);
+            // No lanzamos excepción para no afectar el flujo de pago
         }
     }
 
