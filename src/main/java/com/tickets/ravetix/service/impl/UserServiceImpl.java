@@ -1,12 +1,16 @@
 package com.tickets.ravetix.service.impl;
 
+import com.tickets.ravetix.dto.eventhistory.EventHistoryResponseDTO;
 import com.tickets.ravetix.dto.mapper.UserMapper;
+import com.tickets.ravetix.dto.payment.PaymentResponseDTO;
 import com.tickets.ravetix.dto.user.UserCreateDTO;
 import com.tickets.ravetix.dto.user.UserResponseDTO;
 import com.tickets.ravetix.dto.user.UserUpdateDTO;
 import com.tickets.ravetix.entity.User;
 import com.tickets.ravetix.exception.NotFoundException;
 import com.tickets.ravetix.repository.UserRepository;
+import com.tickets.ravetix.service.interfac.EventHistoryService;
+import com.tickets.ravetix.service.interfac.PaymentService;
 import com.tickets.ravetix.service.interfac.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +29,8 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PaymentService paymentService;
+    private final EventHistoryService eventHistoryService;
 
     @Override
     @Transactional
@@ -47,9 +53,24 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserResponseDTO getUserById(UUID id) {
+        // Get user and convert to DTO
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + id));
-        return userMapper.toDto(user);
+        UserResponseDTO userDTO = userMapper.toDto(user);
+        
+        // Get user's payments
+        Page<PaymentResponseDTO> payments = paymentService.getPaymentsByUserId(id, Pageable.unpaged());
+        if (payments != null && payments.hasContent()) {
+            userDTO.setPagos(payments.getContent());
+        }
+        
+        // Get user's event history
+        Page<EventHistoryResponseDTO> eventHistory = eventHistoryService.getEventHistoryByUserId(id, Pageable.unpaged());
+        if (eventHistory != null && eventHistory.hasContent()) {
+            userDTO.setHistorialEventos(eventHistory.getContent());
+        }
+        
+        return userDTO;
     }
 
     @Override

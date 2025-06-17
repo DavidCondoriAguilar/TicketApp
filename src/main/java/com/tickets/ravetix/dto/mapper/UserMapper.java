@@ -1,12 +1,17 @@
 package com.tickets.ravetix.dto.mapper;
 
+import com.tickets.ravetix.dto.payment.PaymentResponseDTO;
 import com.tickets.ravetix.dto.ticket.TicketResponseDTO;
 import com.tickets.ravetix.dto.user.*;
-import com.tickets.ravetix.entity.User;
+import com.tickets.ravetix.entity.*;
 import com.tickets.ravetix.enums.TicketState;
 import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Mapper for converting between User entity and DTOs.
@@ -28,18 +33,25 @@ public abstract class UserMapper implements BaseMapper<User, UserCreateDTO, User
     @Override
     public abstract User toEntity(UserCreateDTO createDto);
 
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "fechaCreacion", source = "fechaCreacion")
-    @Mapping(target = "fechaActualizacion", source = "fechaActualizacion")
-    @Mapping(target = "version", source = "version")
-    @Mapping(target = "nombre", source = "nombre")
-    @Mapping(target = "correo", source = "correo")
-    @Mapping(target = "telefono", source = "telefono")
-    @Mapping(target = "tickets", expression = "java(mapTickets(entity))")
-    @Mapping(target = "pagos", expression = "java(mapPagos(entity))")
-    @Mapping(target = "historialEventos", expression = "java(mapHistorialEventos(entity))")
     @Override
-    public abstract UserResponseDTO toDto(User entity);
+    public UserResponseDTO toDto(User entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        return UserResponseDTO.builder()
+                .id(entity.getId() != null ? entity.getId().toString() : null)
+                .fechaCreacion(entity.getFechaCreacion())
+                .fechaActualizacion(entity.getFechaActualizacion())
+                .version(entity.getVersion())
+                .nombre(entity.getNombre())
+                .correo(entity.getCorreo())
+                .telefono(entity.getTelefono())
+                .tickets(mapTickets(entity))
+                .pagos(mapPagos(entity.getPagos()))
+                .historialEventos(mapHistorialEventos(entity.getHistorialEventos()))
+                .build();
+    }
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "tickets", ignore = true)
@@ -92,66 +104,28 @@ public abstract class UserMapper implements BaseMapper<User, UserCreateDTO, User
                 .collect(java.util.stream.Collectors.toList());
     }
 
-    protected java.util.List<com.tickets.ravetix.dto.payment.PaymentResponseDTO> mapPagos(User user) {
-        if (user.getPagos() == null) {
-            return new java.util.ArrayList<>();
+    @Autowired
+    protected PaymentMapper paymentMapper;
+    
+    @Autowired
+    protected EventHistoryMapper eventHistoryMapper;
+    
+    @Named("mapPagos")
+    public List<PaymentResponseDTO> mapPagos(Collection<Payment> pagos) {
+        if (pagos == null || pagos.isEmpty()) {
+            return new ArrayList<>();
         }
-        return user.getPagos().stream()
-                .map(pago -> {
-                    var dto = new com.tickets.ravetix.dto.payment.PaymentResponseDTO();
-                    dto.setId(pago.getId().toString());
-                    dto.setMonto(pago.getMonto());
-                    // Usar el valor del enum directamente
-                    dto.setMetodoPago(pago.getMetodoPago());
-                    dto.setFechaPago(pago.getFechaPago());
-                    dto.setEstado(pago.getEstado());
-                    
-                    // Mapear ticket si existe - asumiendo que PaymentResponseDTO tiene un campo 'ticket' de tipo TicketSimpleDTO
-                    if (pago.getTicket() != null) {
-                        var ticketDto = new com.tickets.ravetix.dto.ticket.TicketSimpleDTO();
-                        ticketDto.setId(pago.getTicket().getId().toString());
-                        // Agregar más campos del ticket si es necesario
-                        dto.setTicket(ticketDto);
-                    }
-                    
-                    return dto;
-                })
+        return pagos.stream()
+                .map(paymentMapper::toDto)
                 .collect(java.util.stream.Collectors.toList());
     }
 
-    protected java.util.List<com.tickets.ravetix.dto.eventhistory.EventHistoryResponseDTO> mapHistorialEventos(User user) {
-        if (user.getHistorialEventos() == null) {
+    protected java.util.List<com.tickets.ravetix.dto.eventhistory.EventHistoryResponseDTO> mapHistorialEventos(java.util.Collection<EventHistory> historiales) {
+        if (historiales == null || historiales.isEmpty()) {
             return new java.util.ArrayList<>();
         }
-        return user.getHistorialEventos().stream()
-                .map(historial -> {
-                    var dto = new com.tickets.ravetix.dto.eventhistory.EventHistoryResponseDTO();
-                    dto.setId(historial.getId().toString());
-                    dto.setAsistenciaConfirmada(historial.isAsistenciaConfirmada());
-                    dto.setCalificacion(historial.getCalificacion());
-                    dto.setComentario(historial.getComentario());
-                    dto.setFechaRegistro(historial.getFechaCreacion());
-                    
-                    // Mapear evento relacionado si existe
-                    if (historial.getEvento() != null) {
-                        var eventoDto = new com.tickets.ravetix.dto.event.EventSimpleDTO();
-                        eventoDto.setId(historial.getEvento().getId().toString());
-                        eventoDto.setNombre(historial.getEvento().getNombre());
-                        dto.setEvento(eventoDto);
-                    }
-                    
-                    // Mapear usuario si es necesario
-                    if (historial.getUsuario() != null) {
-                        var usuarioDto = new com.tickets.ravetix.dto.user.UserSimpleDTO();
-                        usuarioDto.setId(historial.getUsuario().getId().toString());
-                        usuarioDto.setNombre(historial.getUsuario().getNombre());
-                        dto.setUsuario(usuarioDto);
-                    }
-                    
-                    return dto;
-                })
+        return historiales.stream()
+                .map(eventHistoryMapper::toDto)
                 .collect(java.util.stream.Collectors.toList());
     }
-
-
 }

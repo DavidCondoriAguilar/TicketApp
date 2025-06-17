@@ -4,17 +4,17 @@ import com.tickets.ravetix.dto.BaseDTO;
 import com.tickets.ravetix.dto.event.EventSimpleDTO;
 import com.tickets.ravetix.dto.user.UserSimpleDTO;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 
 /**
  * DTO for event history responses.
  */
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder(toBuilder = true)
 public class EventHistoryResponseDTO extends BaseDTO {
     private EventSimpleDTO evento;
     private UserSimpleDTO usuario;

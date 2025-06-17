@@ -13,11 +13,10 @@ import java.time.LocalDateTime;
 /**
  * DTO for payment responses.
  */
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 public class PaymentResponseDTO extends BaseDTO {
     private BigDecimal monto;
     private MetodoPago metodoPago;

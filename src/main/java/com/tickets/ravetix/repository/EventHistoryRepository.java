@@ -3,10 +3,13 @@ package com.tickets.ravetix.repository;
 import com.tickets.ravetix.entity.EventHistory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -67,6 +70,16 @@ public interface EventHistoryRepository extends BaseRepository<EventHistory, UUI
 //        @Param("eventId") UUID eventId,
 //        @Param("accion") String accion
 //    );
+    
+    /**
+     * Find a history entry by user ID and event ID.
+     *
+     * @param userId  the ID of the user
+     * @param eventId the ID of the event
+     * @return an Optional containing the event history if found
+     */
+    @Query("SELECT eh FROM EventHistory eh WHERE eh.usuario.id = :userId AND eh.evento.id = :eventId")
+    Optional<EventHistory> findByUsuarioIdAndEventoId(@Param("userId") UUID userId, @Param("eventId") UUID eventId);
     
     /**
      * Find all history entries for a user's events.

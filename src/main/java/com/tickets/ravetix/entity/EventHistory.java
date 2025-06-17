@@ -45,6 +45,12 @@ public class EventHistory extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String comentario;
     
+    @Column(name = "fecha_confirmacion_asistencia")
+    private LocalDateTime fechaConfirmacionAsistencia;
+    
+    @Column(name = "fecha_calificacion")
+    private LocalDateTime fechaCalificacion;
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
