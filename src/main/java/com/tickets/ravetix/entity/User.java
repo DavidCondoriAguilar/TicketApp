@@ -40,6 +40,14 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String nombre;
 
+    /**
+     * User's password.
+     * Must not be empty and should be between 8 and 100 characters.
+     * Passwords should be stored securely (e.g., hashed).
+     */
+    @Column(nullable = false, length = 100)
+    private String password;
+
     @Email
     /**
      * User's email address.
