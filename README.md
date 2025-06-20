@@ -22,11 +22,17 @@ Rave-Tix es una plataforma completa para la gestión de eventos y venta de entra
 
 ## 🚀 Características Principales
 
-### Gestión de Usuarios
-- Registro y autenticación segura con JWT
-- Perfiles personalizables con roles de usuario
-- Historial de compras y asistencia a eventos
-- Validación de datos con restricciones personalizadas
+### 🔐 Gestión de Usuarios y Seguridad
+- **Autenticación JWT** segura y escalable
+- **Autorización basada en roles** (ROLE_USER, ROLE_ADMIN)
+- **Registro seguro** con validación de datos
+- **Hashing de contraseñas** con BCrypt
+- **Protección contra CSRF**
+- **Endpoints protegidos** con anotaciones @PreAuthorize
+- **Gestión de sesiones** sin estado (stateless)
+- **Renovación de tokens** JWT
+- **Validación de tokens** en cada petición
+- **Protección contra ataques de fuerza bruta**
 
 ### Sistema de Tickets
 - Venta de entradas en tiempo real
@@ -58,7 +64,10 @@ Rave-Tix es una plataforma completa para la gestión de eventos y venta de entra
 
 - **Backend**: Java 17, Spring Boot 3.1.0
 - **Base de Datos**: PostgreSQL 13+
-- **Autenticación**: JWT (JSON Web Tokens)
+- **Seguridad**: 
+  - Spring Security 6.5.0
+  - JWT (JSON Web Tokens) para autenticación stateless
+  - BCrypt para hashing seguro de contraseñas
 - **Validación**: Jakarta Bean Validation 3.0
 - **Mapeo**: MapStruct
 - **Documentación**: OpenAPI 3.0 / Swagger
@@ -92,7 +101,25 @@ rave-tix/
 
 ## 📚 Documentación de la API
 
-### Autenticación
+### 🔐 Autenticación y Autorización
+
+#### Registro de Usuario
+```http
+POST /api/auth/register
+```
+
+**Cuerpo de la petición:**
+```json
+{
+  "nombre": "Juan",
+  "apellido": "Pérez",
+  "correo": "usuario@ejemplo.com",
+  "password": "ContraseñaSegura123!",
+  "telefono": "+50378787878",
+  "direccion": "San Salvador",
+  "dui": "12345678-9"
+}
+```
 
 #### Login de Usuario
 ```http
@@ -102,9 +129,26 @@ POST /api/auth/login
 **Cuerpo de la petición:**
 ```json
 {
-  "username": "usuario@ejemplo.com",
-  "password": "contraseña123"
+  "correo": "usuario@ejemplo.com",
+  "password": "ContraseñaSegura123!"
 }
+```
+
+**Respuesta exitosa (200 OK):**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "type": "Bearer",
+  "id": "4d3d5802-ee26-4b7c-bd02-c22c3b2096e9",
+  "correo": "usuario@ejemplo.com",
+  "roles": ["ROLE_USER"]
+}
+```
+
+#### Uso del Token
+Incluir en el header de las peticiones protegidas:
+```
+Authorization: Bearer <token_jwt>
 ```
 
 ### Usuarios
@@ -245,6 +289,26 @@ SERVER_PORT=8080
 JWT_SECRET=your_jwt_secret
 JWT_EXPIRATION=86400000
 ```
+
+## 🔐 Configuración de Seguridad
+
+### Estructura de Seguridad
+```
+com.tickets.ravetix.security/
+├── JwtAuthenticationEntryPoint.java  # Manejo de errores de autenticación
+├── JwtAuthenticationFilter.java      # Filtro para validar tokens JWT
+├── JwtTokenProvider.java            # Generación y validación de tokens
+├── CustomUserDetailsService.java    # Servicio personalizado para cargar usuarios
+└── SecurityConfig.java              # Configuración principal de seguridad
+```
+
+### Flujo de Autenticación
+1. Cliente envía credenciales a `/api/auth/login`
+2. Servidor valida credenciales con `UserDetailsService`
+3. Si son válidas, genera un token JWT firmado
+4. Cliente incluye el token en el header `Authorization`
+5. Filtro JWT valida el token en cada petición
+6. Spring Security establece el contexto de autenticación
 
 ## 📊 Diagrama de Clases
 
